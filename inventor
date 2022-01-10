@@ -1,0 +1,10 @@
+centosnode ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/CENTOS/virtualbox/private_key 
+debnode ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/DEBIAN/virtualbox/private_key 
+
+[webservers]
+centosnode
+debnode
+[spine]
+debnode
+[tor]
+centosnode

@@ -1,0 +1,81 @@
+- hosts: webservers
+  become: true
+  gather_facts: False
+  tasks:
+    -  name: Make sure we can connect
+       ping:
+       tags:
+         - connection
+
+    -  name: Creation of users
+       user:
+            name: Freddy
+            password: "{{'Yfredd2013' | password_hash('sha512')}}"
+            state: present
+       tags:
+         - users_creation
+
+- hosts: webservers
+  become: true
+  gather_facts: False
+  tasks:
+    - name: Creating file, setting permissions and gid bit
+      file:
+        path: /root/Freddy_file
+        owner: Freddy
+        group: Freddy
+        mode: '2760'
+        state: touch
+      tags:
+        - users_file
+
+- hosts: webservers
+  become: true
+  gather_facts: False
+  tasks:
+    - name: Archiving the '/etc' directory on the webservers
+      archive:
+        path: /etc
+        dest: /root/etc.tar.bz2
+        format: bz2
+      tags:
+        - archives
+
+
+- hosts: tor
+  become: true
+  gather_facts: False
+  tasks:
+    -  name: Installing Services on the Tor (CentOS)
+       yum:
+         name: ['httpd','httpd-devel','mysql','mysql-server','mysql-devel','php','php-devel','php-mysqlnd']
+         state: present
+       tags:
+         - ins_serv_Cent
+
+    -  name: Starting services on the Tor (CentOS)
+       service: name={{ item }} state=started enabled=yes
+       with_items:
+         - httpd
+         - mysqld
+       tags:
+         - turn_on_serv_Cent
+
+- hosts: spine
+  become: true
+  gather_facts: False
+  tasks:
+    -  name: Installing Services on the Spine (Debian)
+       apt:
+         name: ['httpd','mariadb-server','mariadb-common']
+         state: present
+       tags:
+         - ins_serv_Deb
+
+    -  name: Starting services on the Spine (Debian)
+       service: name={{ item }} state=started enabled=yes
+       with_items:
+         - httpd
+         - mariadb
+       tags:
+         - turn_on_serv_Deb
