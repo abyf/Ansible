@@ -67,15 +67,45 @@
   tasks:
     -  name: Installing Services on the Spine (Debian)
        apt:
-         name: ['httpd','mariadb-server','mariadb-common']
+         name: ['mariadb-server','mariadb-common','nginx']
          state: present
+         update_cache: yes
        tags:
          - ins_serv_Deb
 
     -  name: Starting services on the Spine (Debian)
        service: name={{ item }} state=started enabled=yes
        with_items:
-         - httpd
+         - nginx
          - mariadb
        tags:
          - turn_on_serv_Deb
+
+- hosts: webservers
+  become: true
+  gather_facts: False
+  tasks:
+    - name: Creating  directory on webservers
+      file:
+        path: /web/html
+        state: directory
+      tags:
+        - webservers_directory
+
+    - name: Creating a testing group on webservers
+      group:
+        name: testing
+        state: present
+      tags:
+        - group_creation
+
+- hosts: tor
+  become: true
+  gather_facts: False
+  tasks:
+    - name: Creating a network group on Tor (CentOS)
+      group:
+        name: networks
+        state: present
+      tags:
+        - group_creation
