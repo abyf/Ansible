@@ -1,0 +1,11 @@
+---
+users:
+  - username: lisa
+    department: Software developer
+    age: 32
+  - username: bob
+    department: Testing
+    age: 38
+  - username: lara
+    department: HR
+    age: 28

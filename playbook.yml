@@ -1,3 +1,4 @@
+---
 - hosts: webservers
   become: true
   gather_facts: False
@@ -109,3 +110,59 @@
         state: present
       tags:
         - group_creation
+- hosts:
+  - webservers
+  - spine
+  become: true
+  gather_facts: False
+  tasks:
+    - name: Configuring MOTD on webservers nodes
+      copy:
+        content: "Welcome to webserver node\n"
+        dest: /etc/motd
+      when: inventory_hostname in groups['webservers']
+      tags:
+        - setting_motd
+
+    - name: Installing more packages on the TOR (centosnode)
+      yum:
+        name: ['samba', nfs-utils]
+        state: present
+      when: inventory_hostname in groups ['tor']
+      tags:
+        - more_packages
+- hosts: webservers
+  become: true
+  gather_facts: False
+  vars_files:
+    - userdetails.yml
+    - password.yml
+  tasks:
+    - name: Creating more users on webservers nodes if conditions are department
+      user:
+        name: "{{ item.username}}"
+        password: "{{lisa_password | password_hash('sha512')}}"
+        groups: testing
+      when: "item.department == 'Software developer' and inventory_hostname in groups['webservers']"
+      loop: "{{users}}"
+      tags:
+        - more_users_creation
+
+    - name: Creating more users on the TOR if conditions are met
+      user:
+        name: "{{item.username}}"
+        password: "{{bob_password | password_hash('sha512')}}"
+        groups: Freddy
+      when: "item.department == 'Testing' and inventory_hostname in groups['tor']"
+      loop: "{{users}}"
+      tags:
+        - more_users_creation
+
+    - name: Creating more users on all managed nodes
+      user:
+        name: "{{item.username}}"
+        password: "{{lara_password | password_hash('sha512')}}"
+      when: item.department == 'HR'
+      loop: "{{users}}"
+      tags:
+        - more_users_creation
